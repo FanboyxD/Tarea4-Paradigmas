@@ -8,7 +8,7 @@ namespace PlatformGameServer.UI
 {
     public partial class ServerUI : Form
     {
-        private GameServer gameServer;
+        // Ya no necesitamos instancia local, usamos el Singleton
         private Button? spawnGroundEnemyButton;
         private Button? spawnBirdEnemyButton;
         private Button? spawnIceEnemyButton;
@@ -18,7 +18,7 @@ namespace PlatformGameServer.UI
         private Label? iceFloorLabel;
         private Label? icePositionLabel;
         private CheckBox? randomIcePositionCheckBox;
-        private Timer uiUpdateTimer;
+        private Timer? uiUpdateTimer; // Cambiado a nullable para evitar warning
 
         // Mapeo de pisos válidos: índice del selector -> fila real en la matriz
         private readonly Dictionary<int, int> floorMapping = new Dictionary<int, int>
@@ -36,7 +36,7 @@ namespace PlatformGameServer.UI
         public ServerUI()
         {
             InitializeComponent();
-            gameServer = new GameServer();
+            // Ya no creamos una nueva instancia, usamos el Singleton
         }
 
         private void InitializeComponent()
@@ -119,31 +119,34 @@ namespace PlatformGameServer.UI
             uiUpdateTimer.Start();
         }
 
-        private void SpawnGroundEnemyButton_Click(object sender, EventArgs e)
+        private void SpawnGroundEnemyButton_Click(object? sender, EventArgs e)
         {
-            foreach (var session in gameServer.GetActiveSessions())
+            // Usar la instancia Singleton
+            foreach (var session in GameServer.Instance.GetActiveSessions())
             {
                 session.SpawnEnemyNearPlayer();
             }
         }
 
-        private void SpawnBirdEnemyButton_Click(object sender, EventArgs e)
+        private void SpawnBirdEnemyButton_Click(object? sender, EventArgs e)
         {
-            foreach (var session in gameServer.GetActiveSessions())
+            // Usar la instancia Singleton
+            foreach (var session in GameServer.Instance.GetActiveSessions())
             {
                 session.SpawnBirdEnemy();
             }
         }
 
-        private void SpawnIceEnemyButton_Click(object sender, EventArgs e)
+        private void SpawnIceEnemyButton_Click(object? sender, EventArgs e)
         {
             // Convertir el valor del selector (1-9) a la fila real de la matriz
-            int selectedFloor = (int)iceFloorSelector.Value;
+            int selectedFloor = (int)(iceFloorSelector?.Value ?? 3);
             int actualFloorY = floorMapping[selectedFloor];
             
-            foreach (var session in gameServer.GetActiveSessions())
+            // Usar la instancia Singleton
+            foreach (var session in GameServer.Instance.GetActiveSessions())
             {
-                if (randomIcePositionCheckBox.Checked)
+                if (randomIcePositionCheckBox?.Checked == true)
                 {
                     // Generar en posición aleatoria del piso especificado
                     session.SpawnIceEnemy(actualFloorY);
@@ -151,23 +154,30 @@ namespace PlatformGameServer.UI
                 else
                 {
                     // Generar en posición específica
-                    int positionX = (int)icePositionSelector.Value;
+                    int positionX = (int)(icePositionSelector?.Value ?? 12);
                     session.SpawnIceEnemy(actualFloorY, positionX);
                 }
             }
         }
 
-        private void RandomIcePositionCheckBox_CheckedChanged(object sender, EventArgs e)
+        private void RandomIcePositionCheckBox_CheckedChanged(object? sender, EventArgs e)
         {
             // Habilitar/deshabilitar el selector de posición según el checkbox
-            icePositionSelector.Enabled = !randomIcePositionCheckBox.Checked;
-            icePositionLabel.Enabled = !randomIcePositionCheckBox.Checked;
+            if (icePositionSelector != null && icePositionLabel != null && randomIcePositionCheckBox != null)
+            {
+                icePositionSelector.Enabled = !randomIcePositionCheckBox.Checked;
+                icePositionLabel.Enabled = !randomIcePositionCheckBox.Checked;
+            }
         }
 
-        private void UpdateUI(object sender, EventArgs e)
+        private void UpdateUI(object? sender, EventArgs e)
         {
+            if (sessionsListBox == null) return;
+
             sessionsListBox.Items.Clear();
-            foreach (var session in gameServer.GetActiveSessions())
+            
+            // Usar la instancia Singleton
+            foreach (var session in GameServer.Instance.GetActiveSessions())
             {
                 int groundEnemies = 0;
                 int birdEnemies = 0;
@@ -197,7 +207,28 @@ namespace PlatformGameServer.UI
 
         public void StartServer()
         {
-            gameServer.Start();
+            // Usar la instancia Singleton
+            GameServer.Instance.Start();
+        }
+
+        // Método para detener el servidor cuando se cierre la UI
+        protected override void OnFormClosed(FormClosedEventArgs e)
+        {
+            uiUpdateTimer?.Stop();
+            uiUpdateTimer?.Dispose();
+            base.OnFormClosed(e);
+        }
+
+        // Método adicional para obtener estadísticas del servidor
+        public void ShowServerStats()
+        {
+            var stats = GameServer.Instance.GetStats();
+            MessageBox.Show($"Servidor: {(stats.IsRunning ? "Activo" : "Inactivo")}\n" +
+                          $"Sesiones Activas: {stats.ActiveSessions}\n" +
+                          $"Total Sesiones: {stats.TotalSessions}",
+                          "Estadísticas del Servidor",
+                          MessageBoxButtons.OK,
+                          MessageBoxIcon.Information);
         }
     }
 }
