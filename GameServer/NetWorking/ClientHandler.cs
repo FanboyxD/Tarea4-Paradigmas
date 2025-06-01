@@ -11,13 +11,12 @@ namespace PlatformGameServer.Networking
     {
         private TcpClient tcpClient;
         private NetworkStream clientStream;
-        private GameServer server;
         private GameSession? gameSession;
 
-        public ClientHandler(TcpClient client, GameServer gameServer)
+        // Ya no necesita referencia al GameServer, usa la instancia singleton
+        public ClientHandler(TcpClient client)
         {
             tcpClient = client;
-            server = gameServer;
             clientStream = client.GetStream();
         }
 
@@ -57,7 +56,8 @@ namespace PlatformGameServer.Networking
 
             if (gameSession != null)
             {
-                server.RemoveSession(gameSession.SessionId);
+                // Usa la instancia singleton
+                GameServer.Instance.RemoveSession(gameSession.SessionId);
             }
 
             tcpClient.Close();
