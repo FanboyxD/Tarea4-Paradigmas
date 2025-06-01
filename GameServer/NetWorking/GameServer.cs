@@ -10,39 +10,60 @@ namespace PlatformGameServer.Networking
 {
     public class GameServer
     {
+        // Instancia única del servidor (thread-safe)
+        private static readonly Lazy<GameServer> _instance = new Lazy<GameServer>(() => new GameServer());
+        
+        // Propiedad pública para obtener la instancia única
+        public static GameServer Instance => _instance.Value;
+
         private TcpListener tcpListener;
         private Thread? tcpListenerThread;
         private bool isListening = false;
         private Dictionary<string, GameSession> gameSessions = new();
         private Thread? gameLoopThread;
+        private readonly object lockObject = new object(); // Para thread safety
 
-        public GameServer()
+        // Constructor privado - previene la creación de instancias externas
+        private GameServer()
         {
             tcpListener = new TcpListener(IPAddress.Any, 8888);
         }
 
         public IEnumerable<GameSession> GetActiveSessions()
         {
-            return gameSessions.Values.Where(s => s.IsActive);
+            lock (lockObject)
+            {
+                return gameSessions.Values.Where(s => s.IsActive).ToList();
+            }
         }
 
         public void Start()
         {
-            tcpListenerThread = new Thread(ListenForClients)
+            lock (lockObject)
             {
-                IsBackground = true
-            };
-            tcpListenerThread.Start();
-            isListening = true;
+                // Prevenir múltiples inicios
+                if (isListening)
+                {
+                    Console.WriteLine("El servidor ya está en ejecución.");
+                    return;
+                }
 
-            gameLoopThread = new Thread(MainGameLoop)
-            {
-                IsBackground = true
-            };
-            gameLoopThread.Start();
+                tcpListenerThread = new Thread(ListenForClients)
+                {
+                    IsBackground = true
+                };
+                tcpListenerThread.Start();
+                isListening = true;
 
-            Console.WriteLine("Servidor iniciado en puerto 8888");
-            Console.WriteLine("Esperando conexiones de clientes...");
+                gameLoopThread = new Thread(MainGameLoop)
+                {
+                    IsBackground = true
+                };
+                gameLoopThread.Start();
+
+                Console.WriteLine("Servidor iniciado en puerto 8888");
+                Console.WriteLine("Esperando conexiones de clientes...");
+            }
         }
 
         private void ListenForClients()
@@ -54,10 +75,15 @@ namespace PlatformGameServer.Networking
                 try
                 {
                     TcpClient client = tcpListener.AcceptTcpClient();
-                    ClientHandler clientHandler = new ClientHandler(client, this);
+                    ClientHandler clientHandler = new ClientHandler(client);
 
                     GameSession gameSession = new GameSession(clientHandler);
-                    gameSessions[gameSession.SessionId] = gameSession;
+                    
+                    lock (lockObject)
+                    {
+                        gameSessions[gameSession.SessionId] = gameSession;
+                    }
+                    
                     clientHandler.SetGameSession(gameSession);
 
                     Thread clientThread = new Thread(clientHandler.HandleClient)
@@ -82,30 +108,33 @@ namespace PlatformGameServer.Networking
             {
                 var sessionsToRemove = new List<string>();
 
-                foreach (var kvp in gameSessions)
+                lock (lockObject)
                 {
-                    var session = kvp.Value;
-                    if (session.IsActive)
+                    foreach (var kvp in gameSessions)
                     {
-                        try
+                        var session = kvp.Value;
+                        if (session.IsActive)
                         {
-                            session.Update();
+                            try
+                            {
+                                session.Update();
+                            }
+                            catch (Exception e)
+                            {
+                                Console.WriteLine($"Error actualizando sesión {session.SessionId}: {e.Message}");
+                                sessionsToRemove.Add(kvp.Key);
+                            }
                         }
-                        catch (Exception e)
+                        else
                         {
-                            Console.WriteLine($"Error actualizando sesión {session.SessionId}: {e.Message}");
                             sessionsToRemove.Add(kvp.Key);
                         }
                     }
-                    else
-                    {
-                        sessionsToRemove.Add(kvp.Key);
-                    }
-                }
 
-                foreach (var sessionId in sessionsToRemove)
-                {
-                    gameSessions.Remove(sessionId);
+                    foreach (var sessionId in sessionsToRemove)
+                    {
+                        gameSessions.Remove(sessionId);
+                    }
                 }
 
                 Thread.Sleep(16);
@@ -114,23 +143,59 @@ namespace PlatformGameServer.Networking
 
         public void RemoveSession(string sessionId)
         {
-            if (gameSessions.ContainsKey(sessionId))
+            lock (lockObject)
             {
-                gameSessions[sessionId].Stop();
-                gameSessions.Remove(sessionId);
-                Console.WriteLine($"Sesión removida: {sessionId}");
+                if (gameSessions.ContainsKey(sessionId))
+                {
+                    gameSessions[sessionId].Stop();
+                    gameSessions.Remove(sessionId);
+                    Console.WriteLine($"Sesión removida: {sessionId}");
+                }
             }
         }
 
         public void Stop()
         {
-            isListening = false;
-            foreach (var session in gameSessions.Values)
+            lock (lockObject)
             {
-                session.Stop();
+                if (!isListening)
+                {
+                    Console.WriteLine("El servidor ya está detenido.");
+                    return;
+                }
+
+                isListening = false;
+                foreach (var session in gameSessions.Values)
+                {
+                    session.Stop();
+                }
+                gameSessions.Clear();
+                tcpListener?.Stop();
+                
+                Console.WriteLine("Servidor detenido.");
             }
-            gameSessions.Clear();
-            tcpListener?.Stop();
         }
+
+        // Método para obtener estadísticas del servidor
+        public ServerStats GetStats()
+        {
+            lock (lockObject)
+            {
+                return new ServerStats
+                {
+                    IsRunning = isListening,
+                    ActiveSessions = gameSessions.Count(kvp => kvp.Value.IsActive),
+                    TotalSessions = gameSessions.Count
+                };
+            }
+        }
+    }
+
+    // Struct auxiliar para estadísticas
+    public struct ServerStats
+    {
+        public bool IsRunning { get; set; }
+        public int ActiveSessions { get; set; }
+        public int TotalSessions { get; set; }
     }
 }
