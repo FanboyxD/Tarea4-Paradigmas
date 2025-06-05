@@ -1,0 +1,14 @@
+C:\Users\Administrator\Documents\Paradigmas\Tarea4\GameServer\obj\Debug\net9.0-windows\GameServer.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Administrator\Documents\Paradigmas\Tarea4\GameServer\obj\Debug\net9.0-windows\GameServer.AssemblyInfoInputs.cache
+C:\Users\Administrator\Documents\Paradigmas\Tarea4\GameServer\obj\Debug\net9.0-windows\GameServer.AssemblyInfo.cs
+C:\Users\Administrator\Documents\Paradigmas\Tarea4\GameServer\obj\Debug\net9.0-windows\GameServer.csproj.CoreCompileInputs.cache
+C:\Users\Administrator\Documents\Paradigmas\Tarea4\GameServer\bin\Debug\net9.0-windows\GameServer.exe
+C:\Users\Administrator\Documents\Paradigmas\Tarea4\GameServer\bin\Debug\net9.0-windows\GameServer.deps.json
+C:\Users\Administrator\Documents\Paradigmas\Tarea4\GameServer\bin\Debug\net9.0-windows\GameServer.runtimeconfig.json
+C:\Users\Administrator\Documents\Paradigmas\Tarea4\GameServer\bin\Debug\net9.0-windows\GameServer.dll
+C:\Users\Administrator\Documents\Paradigmas\Tarea4\GameServer\bin\Debug\net9.0-windows\GameServer.pdb
+C:\Users\Administrator\Documents\Paradigmas\Tarea4\GameServer\obj\Debug\net9.0-windows\GameServer.dll
+C:\Users\Administrator\Documents\Paradigmas\Tarea4\GameServer\obj\Debug\net9.0-windows\refint\GameServer.dll
+C:\Users\Administrator\Documents\Paradigmas\Tarea4\GameServer\obj\Debug\net9.0-windows\GameServer.pdb
+C:\Users\Administrator\Documents\Paradigmas\Tarea4\GameServer\obj\Debug\net9.0-windows\GameServer.genruntimeconfig.cache
+C:\Users\Administrator\Documents\Paradigmas\Tarea4\GameServer\obj\Debug\net9.0-windows\ref\GameServer.dll
