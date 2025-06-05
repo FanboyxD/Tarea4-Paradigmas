@@ -1,0 +1,15 @@
+iquick\gameclient\Fruit.class
+iquick\gameclient\Enemy.class
+iquick\gameclient\GameClient.class
+iquick\gameclient\GameObserver.class
+iquick\gameclient\GameClient$1.class
+iquick\gameclient\DestroyedTile.class
+iquick\gameclient\GameMap.class
+iquick\gameclient\ServerConnection.class
+iquick\gameclient\JsonObjectWrapper.class
+iquick\gameclient\SpectatorClient.class
+iquick\gameclient\GameSubject.class
+iquick\gameclient\GameLoop.class
+iquick\gameclient\Player.class
+iquick\gameclient\GamePanel.class
+iquick\gameclient\InputHandler.class
