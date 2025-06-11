@@ -1,0 +1,9 @@
+iquick\client\Player.class
+iquick\client\Client.class
+iquick\client\NetworkManager.class
+iquick\client\Enemy.class
+iquick\client\Enemy$1.class
+iquick\client\EnemyType.class
+iquick\client\Client$1.class
+iquick\client\EnemyManager.class
+iquick\client\Platform.class
