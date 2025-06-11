@@ -19,6 +19,7 @@ public class Enemy {
     private boolean onGround;
     private double fallSpeed;
     private boolean hasLanded;
+    private boolean initialized = false;
     
     public Enemy(int x, int y, EnemyType type) {
         this.gridX = x;
@@ -38,49 +39,100 @@ public class Enemy {
     }
     
     public void spawn(double x, double y) {
-        this.x = x;
-        this.y = y;
-        this.hasLanded = false;
-        this.onGround = false;
-        this.fallSpeed = 0;
-        this.movementTimer = 0;
-        
-        if (x < Client.getMatrixWidth() * Client.getCellSize() / 2) {
-            direction = 1;
-        } else {
-            direction = -1;
-        }
-        
-        switch (type) {
-            case FOCA:
-                speed = ENEMY_SPEED;
-                break;
-            case BIRD:
-                speed = ENEMY_SPEED * 1.5;
-                verticalDirection = Math.random() < 0.5 ? 1 : -1;
-                break;
-            case ICE:
-                speed = ENEMY_SPEED * 0.8;
-                fallSpeed = 2.0;
-                this.y = 0;
-                break;
+        // Solo hacer spawn si no ha sido inicializado previamente
+        if (!initialized) {
+            this.x = x;
+            this.y = y;
+            this.hasLanded = false;
+            this.onGround = false;
+            this.fallSpeed = 0;
+            this.movementTimer = 0;
+            this.initialized = true; // Marcar como inicializado
+
+            // Solo cambiar la dirección basada en la posición X si no es un enemigo FOCA
+            if (type != EnemyType.FOCA) {
+                if (x < Client.getMatrixWidth() * Client.getCellSize() / 2) {
+                    direction = 1;
+                } else {
+                    direction = -1;
+                }
+            }
+
+            switch (type) {
+                case FOCA:
+                    speed = ENEMY_SPEED;
+                    // Para FOCA, establecer dirección hacia el centro de la pantalla
+                    double centerX = Client.getMatrixWidth() * Client.getCellSize() / 2.0;
+                    if (x < centerX) {
+                        direction = 1; // Moverse hacia la derecha
+                    } else {
+                        direction = -1; // Moverse hacia la izquierda
+                    }
+                    break;
+                case BIRD:
+                    speed = ENEMY_SPEED * 1.5;
+                    verticalDirection = Math.random() < 0.5 ? 1 : -1;
+                    break;
+                case ICE:
+                    speed = ENEMY_SPEED * 0.8;
+                    fallSpeed = 2.0;
+                    this.y = 0;
+                    break;
+            }
         }
     }
-    
+
     public void copyFrom(Enemy other) {
         if (other != null) {
             this.gridX = other.gridX;
             this.gridY = other.gridY;
+
+            boolean wasActive = this.active;
+            EnemyType previousType = this.type;
+
             this.type = other.type;
             this.active = other.active;
-            
-            if (other.active && !this.active) {
-                // Enemigo que se acaba de activar
-                spawn(other.x, other.y);
+
+            // Solo hacer spawn si:
+            // 1. El enemigo se acaba de activar (no estaba activo antes)
+            // 2. O si cambió de tipo (es un enemigo diferente)
+            if (other.active && (!wasActive || previousType != other.type)) {
+                // Resetear el estado de inicialización para permitir nuevo spawn
+                this.initialized = false;
+
+                // Si es FOCA, el EnemyManager manejará la posición especial
+                if (this.type != EnemyType.FOCA) {
+                    spawn(other.gridX * Client.getCellSize(), other.gridY * Client.getCellSize());
+                } else {
+                    // Para FOCA, usar las coordenadas del grid pero dejar que EnemyManager ajuste
+                    spawn(other.gridX * Client.getCellSize(), other.gridY * Client.getCellSize());
+                }
             }
-            
-            this.active = other.active;
+
+            // Si se desactiva, resetear inicialización para futuros spawns
+            if (!other.active) {
+                this.initialized = false;
+            }
         }
+    }
+
+    public void setActive(boolean active) {
+        // Si se desactiva, resetear inicialización
+        if (!active && this.active) {
+            this.initialized = false;
+        }
+        this.active = active;
+    }
+
+    // Método para verificar si está inicializado
+    public boolean isInitialized() {
+        return initialized;
+    }
+
+    // Método para forzar un respawn (usado por EnemyManager para casos especiales)
+    public void forceRespawn(double x, double y) {
+        this.initialized = false; // Resetear estado
+        spawn(x, y); // Hacer spawn con nueva posición
     }
     
     public void setGridPosition(int x, int y) {
@@ -90,10 +142,6 @@ public class Enemy {
     
     public void setType(EnemyType type) {
         this.type = type;
-    }
-    
-    public void setActive(boolean active) {
-        this.active = active;
     }
     
     public boolean isActive() {
@@ -173,7 +221,7 @@ public class Enemy {
     
     private void updateFast(Platform[][] platforms) {
         movementTimer++;
-        
+
         if (movementTimer > 60 + (int)(Math.random() * 60)) {
             if (Math.random() < 0.3) {
                 direction *= -1;
@@ -183,79 +231,46 @@ public class Enemy {
             }
             movementTimer = 0;
         }
-        
+
+        // Movimiento horizontal
         velX = direction * speed;
         double newX = x + velX;
-        
+
+        // Solo verificar límites de pantalla, no plataformas
         if (newX < 0 || newX > (Client.getMatrixWidth() * Client.getCellSize() - size)) {
             direction *= -1;
             newX = x;
         }
-        
-        if (!checkCollision(newX, y, platforms)) {
-            x = newX;
-        } else {
-            direction *= -1;
-        }
-        
+
+        // El BIRD puede atravesar plataformas, así que no verificamos colisiones
+        x = newX;
+
+        // Movimiento vertical
         velY = verticalDirection * speed * 0.7;
         double newY = y + velY;
-        
+
+        // Solo verificar límites de pantalla, no plataformas
         if (newY < 0 || newY > (Client.getMatrixHeight() * Client.getCellSize() - size)) {
             verticalDirection *= -1;
             newY = y;
         }
-        
-        if (!checkCollision(x, newY, platforms)) {
-            y = newY;
-        } else {
-            verticalDirection *= -1;
-        }
+
+        // El BIRD puede atravesar plataformas, así que no verificamos colisiones
+        y = newY;
     }
     
     private void updateStrong(Platform[][] platforms) {
-        if (!hasLanded) {
-            fallSpeed += 0.8;
-            if (fallSpeed > 8) fallSpeed = 8;
-            
-            double newY = y + fallSpeed;
-            
-            if (checkCollision(x, newY, platforms) || newY >= (Client.getMatrixHeight() * Client.getCellSize() - size)) {
-                hasLanded = true;
-                onGround = true;
-                fallSpeed = 0;
-                
-                if (newY >= (Client.getMatrixHeight() * Client.getCellSize() - size)) {
-                    y = Client.getMatrixHeight() * Client.getCellSize() - size;
-                } else {
-                    int gridY = (int)((y + size + fallSpeed) / Client.getCellSize());
-                    y = gridY * Client.getCellSize() - size;
-                }
-            } else {
-                y = newY;
-            }
-        } else {
-            velX = direction * speed;
-            double newX = x + velX;
-            
-            if (newX < 0 || newX > (Client.getMatrixWidth() * Client.getCellSize() - size)) {
-                direction *= -1;
-                return;
-            }
-            
-            if (checkCollision(newX, y, platforms)) {
-                direction *= -1;
-                return;
-            }
-            
-            double futureX = newX + (direction * Client.getCellSize());
-            if (!checkCollision(futureX, y + Client.getCellSize(), platforms) && 
-                y + Client.getCellSize() < Client.getMatrixHeight() * Client.getCellSize()) {
-                direction *= -1;
-                return;
-            }
-            
-            x = newX;
+        // El enemigo ICE solo cae en vertical atravesando todas las plataformas
+        fallSpeed += 0.8;
+        if (fallSpeed > 8) fallSpeed = 8;
+
+        // Movimiento solo vertical
+        double newY = y + fallSpeed;
+        y = newY;
+
+        // Verificar si ha salido del mapa por abajo para desactivarlo
+        if (y > Client.getMatrixHeight() * Client.getCellSize()) {
+            active = false; // Desaparecerá cuando salga del mapa
         }
     }
     
