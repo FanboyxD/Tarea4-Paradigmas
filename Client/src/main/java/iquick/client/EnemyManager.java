@@ -1,10 +1,10 @@
 package iquick.client;
-
 import java.awt.Graphics2D;
 
 public class EnemyManager {
     private static final int MAX_ENEMIES = 10;
     private Enemy[] enemies;
+    private Player playerReference; // Referencia al jugador para obtener su posición
     
     public EnemyManager() {
         enemies = new Enemy[MAX_ENEMIES];
@@ -13,16 +13,38 @@ public class EnemyManager {
         }
     }
     
+    // Método para establecer la referencia al jugador
+    public void setPlayerReference(Player player) {
+        this.playerReference = player;
+    }
+    
     public void updateEnemies(Enemy[] newEnemies) {
-        if (newEnemies != null && newEnemies.length <= MAX_ENEMIES) {
-            for (int i = 0; i < newEnemies.length && i < MAX_ENEMIES; i++) {
-                if (newEnemies[i] != null) {
-                    // Actualizar enemigo existente
-                    enemies[i].copyFrom(newEnemies[i]);
+    if (newEnemies != null && newEnemies.length <= MAX_ENEMIES) {
+        for (int i = 0; i < newEnemies.length && i < MAX_ENEMIES; i++) {
+            if (newEnemies[i] != null) {
+                // Verificar si es un enemigo completamente nuevo o reactivado
+                boolean isNewOrReactivated = !enemies[i].isActive() && newEnemies[i].isActive();
+                boolean typeChanged = enemies[i].getType() != newEnemies[i].getType();
+
+                // Primero copiar los datos básicos del enemigo
+                enemies[i].copyFrom(newEnemies[i]);
+
+                // Manejo especial para enemigos FOCA que se acaban de activar o cambiar de tipo
+                if (newEnemies[i].getType() == EnemyType.FOCA && 
+                    newEnemies[i].isActive() && 
+                    (isNewOrReactivated || typeChanged)) {
+
+                    // Usar directamente las coordenadas del servidor (que ahora serán espacios vacíos)
+                    double spawnX = newEnemies[i].getGridX() * Client.getCellSize();
+                    double spawnY = newEnemies[i].getGridY() * Client.getCellSize();
+
+                    // Forzar reinicialización y aplicar posición de spawn del servidor
+                    enemies[i].forceRespawn(spawnX, spawnY);
                 }
             }
         }
     }
+}
     
     public void updateAll(Platform[][] platforms) {
         for (Enemy enemy : enemies) {
@@ -69,6 +91,12 @@ public class EnemyManager {
     
     public void spawnEnemy(int index, double x, double y, EnemyType type) {
         if (index >= 0 && index < MAX_ENEMIES) {
+            // Si es un enemigo FOCA y tenemos referencia al jugador, ajustar la posición Y
+            if (type == EnemyType.FOCA && playerReference != null) {
+                int playerRow = (int)(playerReference.getY() / Client.getCellSize());
+                y = playerRow * Client.getCellSize();
+            }
+            
             enemies[index].spawn(x, y);
             enemies[index].setType(type);
             enemies[index].setActive(true);
