@@ -8,7 +8,7 @@ import java.util.Set;
 
 public class Client extends JFrame implements KeyListener {
     private static final int MATRIX_WIDTH = 20;
-    private static final int MATRIX_HEIGHT = 15;
+    private static final int MATRIX_HEIGHT = 5;
     private static final int CELL_SIZE = 30;
     private static final int FPS = 60;
     private static final int FRAME_TIME = 1000 / FPS;
@@ -36,6 +36,7 @@ public class Client extends JFrame implements KeyListener {
     private void initializeGame() {
         player = new Player(2 * CELL_SIZE, (MATRIX_HEIGHT - 2) * CELL_SIZE);
         enemyManager = new EnemyManager();
+        enemyManager.setPlayerReference(player);
         platforms = new Platform[MATRIX_HEIGHT][MATRIX_WIDTH];
         gameMatrix = new int[MATRIX_HEIGHT][MATRIX_WIDTH];
         networkManager = new NetworkManager(this);
