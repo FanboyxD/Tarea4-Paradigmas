@@ -251,20 +251,24 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 }
 
 void InitializeGame() {
-    // Inicializar matriz del juego
-    memset(gameState.matrix, 0, sizeof(gameState.matrix));
+    // Definir la matriz del mapa
+    int mapMatrix[MATRIX_HEIGHT][MATRIX_WIDTH] = {
+        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+    };
     
-    // Crear algunas plataformas
-    for (int i = 0; i < MATRIX_WIDTH; i++) {
-        gameState.matrix[MATRIX_HEIGHT-1][i] = CELL_PLATFORM; // Suelo
-    }
-    
-    // Plataformas adicionales
-    for (int i = 5; i < 15; i++) {
-        gameState.matrix[MATRIX_HEIGHT-5][i] = CELL_PLATFORM;
-    }
-    for (int i = 2; i < 8; i++) {
-        gameState.matrix[MATRIX_HEIGHT-8][i] = CELL_PLATFORM;
+    // Aplicar la matriz del mapa al gameState
+    for (int i = 0; i < MATRIX_HEIGHT; i++) {
+        for (int j = 0; j < MATRIX_WIDTH; j++) {
+            if (mapMatrix[i][j] == 1) {
+                gameState.matrix[i][j] = CELL_PLATFORM;
+            } else {
+                gameState.matrix[i][j] = CELL_EMPTY;
+            }
+        }
     }
     
     // Posición inicial del jugador
@@ -283,9 +287,29 @@ void InitializeGame() {
 void SpawnEnemy(EnemyType type) {
     if (gameState.enemyCount >= MAX_ENEMIES) return;
     
-    // Encontrar posición libre
-    int x = rand() % (MATRIX_WIDTH - 2) + 1;
-    int y = MATRIX_HEIGHT - 2;
+    int x, y;
+    
+    if (type == ENEMY_FOCA) {
+        // Para FOCA, buscar posiciones vacías (0) en los bordes
+        x = (rand() % 2 == 0) ? 1 : MATRIX_WIDTH - 2; // Borde izquierdo o derecho
+        
+        // Buscar una posición Y que sea espacio vacío (0) y que tenga plataforma debajo
+        int attempts = 0;
+        do {
+            y = rand() % (MATRIX_HEIGHT - 3) + 1; // Entre 1 y MATRIX_HEIGHT-3 para dejar espacio para el suelo
+            attempts++;
+        } while (attempts < 20 && (gameState.matrix[y][x] != CELL_EMPTY || 
+                 gameState.matrix[y + 1][x] != CELL_PLATFORM)); // Verificar que hay plataforma debajo
+        
+        // Si no encuentra espacio válido, usar posición segura sobre el suelo
+        if (attempts >= 20) {
+            y = MATRIX_HEIGHT - 2; // Una fila arriba del suelo
+        }
+    } else {
+        // Para otros enemigos, mantener el comportamiento original
+        x = rand() % (MATRIX_WIDTH - 2) + 1;
+        y = MATRIX_HEIGHT - 2;
+    }
     
     // Buscar el primer slot libre
     for (int i = 0; i < MAX_ENEMIES; i++) {
@@ -339,10 +363,21 @@ void SpawnFruit(FruitType type) {
 }
 
 void UpdateGame() {
-    // Limpiar matriz excepto plataformas
+    // Matriz base del mapa
+    int mapMatrix[MATRIX_HEIGHT][MATRIX_WIDTH] = {
+        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+    };
+    
+    // Restaurar mapa base
     for (int i = 0; i < MATRIX_HEIGHT; i++) {
         for (int j = 0; j < MATRIX_WIDTH; j++) {
-            if (gameState.matrix[i][j] != CELL_PLATFORM) {
+            if (mapMatrix[i][j] == 1) {
+                gameState.matrix[i][j] = CELL_PLATFORM;
+            } else {
                 gameState.matrix[i][j] = CELL_EMPTY;
             }
         }
