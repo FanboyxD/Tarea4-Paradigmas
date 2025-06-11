@@ -7,7 +7,7 @@
 
 // Configuración del juego
 #define MATRIX_WIDTH 20
-#define MATRIX_HEIGHT 15
+#define MATRIX_HEIGHT 5
 #define MAX_ENEMIES 10
 #define MAX_FRUITS 15
 
