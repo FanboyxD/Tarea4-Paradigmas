@@ -15,6 +15,7 @@ public class Client extends JFrame implements KeyListener {
     
     private Player player;
     private EnemyManager enemyManager;
+    private FruitManager fruitManager;
     private Platform[][] platforms;
     private int[][] gameMatrix;
     
@@ -37,6 +38,8 @@ public class Client extends JFrame implements KeyListener {
         player = new Player(2 * CELL_SIZE, (MATRIX_HEIGHT - 2) * CELL_SIZE);
         enemyManager = new EnemyManager();
         enemyManager.setPlayerReference(player);
+        fruitManager = new FruitManager();
+        fruitManager.setPlayerReference(player);
         platforms = new Platform[MATRIX_HEIGHT][MATRIX_WIDTH];
         gameMatrix = new int[MATRIX_HEIGHT][MATRIX_WIDTH];
         networkManager = new NetworkManager(this);
@@ -92,9 +95,11 @@ public class Client extends JFrame implements KeyListener {
         networkManager.connect();
     }
     
-    public void updateGameData(int[][] matrix, Enemy[] enemies) {
+    public void updateGameData(int[][] matrix, Enemy[] enemies, Fruit[] fruits) {
         this.gameMatrix = matrix;
         enemyManager.updateEnemies(enemies);
+        fruitManager.updateFruits(fruits);
+
         updateGameObjects();
     }
     
@@ -134,6 +139,7 @@ public class Client extends JFrame implements KeyListener {
         
         // Enemigos
         enemyManager.drawAll(g2d);
+        fruitManager.drawAll(g2d);
         
         // Grid
         g2d.setColor(new Color(255, 255, 255, 50));

@@ -7,8 +7,9 @@ import java.nio.ByteOrder;
 
 public class NetworkManager {
     private static final String SERVER_HOST = "localhost";
-    private static final int SERVER_PORT = 8080;
+    private static final int SERVER_PORT = 8888;
     private static final int MAX_ENEMIES = 10;
+    private static final int MAX_FRUITS = 4;
     
     private Socket socket;
     private DataInputStream inputStream;
@@ -115,9 +116,32 @@ public class NetworkManager {
                 enemies[i].setType(EnemyType.values()[Math.min(Math.max(type, 0), EnemyType.values().length - 1)]);
                 enemies[i].setActive(active == 1);
             }
+
+            int fruitCount = 0;
+            if (buffer.remaining() >= 4) {
+                fruitCount = buffer.getInt();
+            }
+
+            Fruit[] fruits = new Fruit[MAX_FRUITS];
+            for (int i = 0; i < MAX_FRUITS; i++) {
+                fruits[i] = new Fruit(0, 0, Fruit.Type.NARANJA); // Inicializar con tipo NARANJA
+            }
+
+            for (int i = 0; i < fruitCount && buffer.remaining() >= 8; i++) {
+                int x = buffer.getInt();
+                int y = buffer.getInt();
+                int type = buffer.getInt();
+                
+                if (i < MAX_FRUITS) {
+                    fruits[i].spawn(x * Client.getCellSize(), y * Client.getCellSize());
+                }
+
+                fruits[i].setType(Fruit.Type.values()[Math.min(Math.max(type, 0), Fruit.Type.values().length - 1)]);
+                fruits[i].setGridPosition(x, y);
+            }
             
             // Actualizar datos del cliente
-            client.updateGameData(gameMatrix, enemies);
+            client.updateGameData(gameMatrix, enemies, fruits);
             
         } catch (Exception e) {
             System.err.println("Error parseando datos del juego: " + e.getMessage());
