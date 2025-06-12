@@ -124,7 +124,7 @@ public class NetworkManager {
 
             Fruit[] fruits = new Fruit[MAX_FRUITS];
             for (int i = 0; i < MAX_FRUITS; i++) {
-                fruits[i] = new Fruit(0, 0, Fruit.Type.NARANJA); // Inicializar con tipo NARANJA
+                fruits[i] = new Fruit(0, 0, Fruit.Type.NONE); // Inicializar con tipo NARANJA
             }
 
             for (int i = 0; i < fruitCount && buffer.remaining() >= 8; i++) {

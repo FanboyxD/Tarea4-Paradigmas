@@ -4,25 +4,28 @@ import java.awt.*;
 
 public class Fruit {
     public enum Type {
-        NARANJA, BANANO, BERENJENA, LECHUGA
+        NONE, NARANJA, BANANO, BERENJENA, LECHUGA
     }
 
     private int x;
     private int y;
     private Type type;
     private boolean collected;
+    private boolean active; // Indica si el fruto está activo o no
 
     public Fruit(int x, int y, Type type) {
         this.x = x;
         this.y = y;
         this.type = type;
         this.collected = false;
+        this.active = false; // Inicializar como inactivo
     }
 
     public void spawn(double x, double y) {
         this.x = (int) x;
         this.y = (int) y;
         this.collected = false;
+        this.active = true; // Activar el fruto al hacer spawn
     }
 
     public void setType(Type type) {
@@ -34,8 +37,18 @@ public class Fruit {
         this.y = y;
     }
 
-    public void draw(Graphics2D g) {
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+    private boolean isActive() {
+        return active;
+    }
 
+    public void draw(Graphics2D g) {
+        if (!active) {
+            return; // No dibujar si el fruto no está activo
+        }
+        
         Color fruitColor;
 
         switch (type) {
@@ -56,6 +69,9 @@ public class Fruit {
         }
         if (!collected) {
             switch (type) {
+                case NONE:
+                    g.setColor(java.awt.Color.GRAY); // Color por defecto para NONE
+                    break;
                 case NARANJA:
                     g.setColor(java.awt.Color.ORANGE);
                     break;
@@ -72,6 +88,11 @@ public class Fruit {
             g.fillOval(x, y, 20, 20); // Dibujar el fruto como un círculo
             g.setColor(fruitColor);
         }
+    }
+
+    public void forceRespawn(double x, double y) {
+        this.collected = false;
+        spawn(x, y);
     }
 
     public int getX() {
@@ -96,6 +117,8 @@ public class Fruit {
 
     public int getPoints() {
         switch (type) {
+            case NONE:
+                return 0;
             case NARANJA:
                 return 100;
             case BANANO:

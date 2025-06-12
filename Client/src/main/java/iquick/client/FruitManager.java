@@ -5,12 +5,13 @@ public class FruitManager {
     private static final int MAX_FRUITS = 4;
     private Fruit[] fruits;
     private Player playerReference; // Referencia al jugador para obtener su posición
+    private boolean typeChanged = false; // Indica si el tipo de fruto ha cambiado
 
 
     public FruitManager() {
         fruits = new Fruit[MAX_FRUITS];
         for (int i = 0; i < MAX_FRUITS; i++) {
-            fruits[i] = new Fruit(0, 0, Fruit.Type.LECHUGA); // Inicializar con tipo NARANJA
+            fruits[i] = new Fruit(0, 0, Fruit.Type.NONE); // Inicializar con tipo NARANJA
         }
     }
 
@@ -26,9 +27,15 @@ public class FruitManager {
                     // Copiar los datos del nuevo fruto
                     fruits[i].spawn(newFruits[i].getX(), newFruits[i].getY());
                 }
+                // Verificar si el tipo de fruto ha cambiado
+                if (fruits[i].getType() != newFruits[i].getType()) {
+                    typeChanged = true; // Marcar que el tipo ha cambiado
+                }
             }
         }
     }
+
+    
 
     public Fruit[] getFruits() {
         return fruits;
