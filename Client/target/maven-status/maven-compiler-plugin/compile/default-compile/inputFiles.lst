@@ -1,0 +1,17 @@
+C:\Users\Administrator\Documents\NetBeansProjects\Client\src\main\java\iquick\client\AttackResult.java
+C:\Users\Administrator\Documents\NetBeansProjects\Client\src\main\java\iquick\client\Client.java
+C:\Users\Administrator\Documents\NetBeansProjects\Client\src\main\java\iquick\client\EnemyManager.java
+C:\Users\Administrator\Documents\NetBeansProjects\Client\src\main\java\iquick\client\facade\NetworkManager.java
+C:\Users\Administrator\Documents\NetBeansProjects\Client\src\main\java\iquick\client\factory\ConcreteGameEntityFactory.java
+C:\Users\Administrator\Documents\NetBeansProjects\Client\src\main\java\iquick\client\factory\Enemy.java
+C:\Users\Administrator\Documents\NetBeansProjects\Client\src\main\java\iquick\client\factory\EnemyType.java
+C:\Users\Administrator\Documents\NetBeansProjects\Client\src\main\java\iquick\client\factory\Fruit.java
+C:\Users\Administrator\Documents\NetBeansProjects\Client\src\main\java\iquick\client\factory\FruitType.java
+C:\Users\Administrator\Documents\NetBeansProjects\Client\src\main\java\iquick\client\factory\GameEntityFactory.java
+C:\Users\Administrator\Documents\NetBeansProjects\Client\src\main\java\iquick\client\FruitManager.java
+C:\Users\Administrator\Documents\NetBeansProjects\Client\src\main\java\iquick\client\observer\GameObserver.java
+C:\Users\Administrator\Documents\NetBeansProjects\Client\src\main\java\iquick\client\observer\GameState.java
+C:\Users\Administrator\Documents\NetBeansProjects\Client\src\main\java\iquick\client\observer\SpectatorWindow.java
+C:\Users\Administrator\Documents\NetBeansProjects\Client\src\main\java\iquick\client\Platform.java
+C:\Users\Administrator\Documents\NetBeansProjects\Client\src\main\java\iquick\client\PlatformType.java
+C:\Users\Administrator\Documents\NetBeansProjects\Client\src\main\java\iquick\client\Player.java
