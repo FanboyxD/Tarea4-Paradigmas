@@ -323,39 +323,50 @@ public class Player {
         }
         breakPlatformsInRange();
     }
+    /**
+     * Rompe las plataformas dentro del rango de ataque del jugador que se encuentran por encima de su posición actual.
+     * 
+     * Este método obtiene la matriz de plataformas desde el cliente y verifica, para cada plataforma no rota,
+     * si se encuentra dentro del rango de ataque definido por {@code ATTACK_RANGE} y si está ubicada arriba del jugador.
+     * Si ambas condiciones se cumplen, la plataforma es rota y se otorgan puntos al jugador.
+     * 
+     * No se consideran las plataformas de la primera y última fila o columna.
+     */
     private void breakPlatformsInRange() {
-    // Obtener las plataformas desde el cliente
-    Platform[][] platforms = Client.getCurrentPlatforms();
-    if (platforms == null) return;
-    
-    int centerX = (int)(x + size/2);
-    int centerY = (int)(y + size/2);
-    
-    // Buscar plataformas en rango de ataque
-    for (int i = 1; i < Client.getMatrixHeight() - 1; i++) { // Evitar primera y última fila
-        for (int j = 1; j < Client.getMatrixWidth() - 1; j++) { // Evitar primera y última columna
-            if (platforms[i][j] != null && !platforms[i][j].isBroken()) {
-                int platformCenterX = platforms[i][j].getPixelX() + Client.getCellSize()/2;
-                int platformCenterY = platforms[i][j].getPixelY() + Client.getCellSize()/2;
-                
-                double distance = Math.sqrt(Math.pow(centerX - platformCenterX, 2) + 
-                                          Math.pow(centerY - platformCenterY, 2));
-                
-                if (distance <= ATTACK_RANGE) {
-                    // Solo romper plataformas que están ARRIBA del jugador
-                    // Y que no sean los bordes del mapa (ya filtrado en el loop)
-                    if (platformCenterY < centerY) {
-                        platforms[i][j].breakPlatform();
-                        addScore(10); // Puntos por romper plataforma
-                        System.out.println("¡Plataforma rota en (" + j + "," + i + ")!");
+        // Obtener las plataformas desde el cliente
+        Platform[][] platforms = Client.getCurrentPlatforms();
+        if (platforms == null) return;
+        
+        int centerX = (int)(x + size/2);
+        int centerY = (int)(y + size/2);
+        
+        // Buscar plataformas en rango de ataque
+        for (int i = 1; i < Client.getMatrixHeight() - 1; i++) { // Evitar primera y última fila
+            for (int j = 1; j < Client.getMatrixWidth() - 1; j++) { // Evitar primera y última columna
+                if (platforms[i][j] != null && !platforms[i][j].isBroken()) {
+                    int platformCenterX = platforms[i][j].getPixelX() + Client.getCellSize()/2;
+                    int platformCenterY = platforms[i][j].getPixelY() + Client.getCellSize()/2;
+                    
+                    double distance = Math.sqrt(Math.pow(centerX - platformCenterX, 2) + 
+                                            Math.pow(centerY - platformCenterY, 2));
+                    
+                    if (distance <= ATTACK_RANGE) {
+                        // Solo romper plataformas que están ARRIBA del jugador
+                        if (platformCenterY < centerY) {
+                            platforms[i][j].breakPlatform();
+                            addScore(10); // Puntos por romper plataforma
+                        }
                     }
                 }
             }
         }
     }
-}
 
-    // NUEVO: Método para respawn más seguro
+    /**
+     * Restaura la posición del jugador a una ubicación segura de respawn dentro de los límites del mapa.
+     * Calcula una posición inicial predeterminada y ajusta la coordenada Y para asegurar que esté dentro de los límites válidos.
+     * Reinicia la velocidad del jugador y permite que la física determine si el jugador está en el suelo.
+     */
     private void respawnPlayer() {
         // Posición de respawn más segura: encontrar una posición válida
         double spawnX = 2 * Client.getCellSize();
@@ -375,7 +386,6 @@ public class Player {
         onGround = false; // Permitir que la física determine si está en el suelo
     }
 
-    // CORREGIDO: Método para manejar colisión con enemigos
     private void handleEnemyCollision() {
         loseLive();
         makeInvulnerable(); // Activar invulnerabilidad después de perder vida
@@ -387,135 +397,143 @@ public class Player {
     
     
     public void makeInvulnerable() {
-    invulnerable = true;
-    invulnerabilityTimer = INVULNERABILITY_TIME;
-}
+        invulnerable = true;
+        invulnerabilityTimer = INVULNERABILITY_TIME;
+    }
 
-public void resetVelocity() {
-    this.velX = 0;
-    this.velY = 0;
-    this.onGround = true;
-}
+    public void resetVelocity() {
+        this.velX = 0;
+        this.velY = 0;
+        this.onGround = true;
+    }
     
+    /**
+     * Verifica si existe una colisión horizontal entre el jugador y las plataformas.
+     *
+     * @param newX      La nueva posición X del jugador.
+     * @param currentY  La posición Y actual del jugador.
+     * @param platforms La matriz de plataformas del juego.
+     * @return true si hay colisión horizontal con alguna plataforma no rota, false en caso contrario.
+     */
     private boolean checkHorizontalCollision(double newX, double currentY, Platform[][] platforms) {
-    int left = (int) (newX / Client.getCellSize());
-    int right = (int) ((newX + size - 1) / Client.getCellSize());
-    int top = (int) (currentY / Client.getCellSize());
-    int bottom = (int) ((currentY + size - 1) / Client.getCellSize());
-    
-    for (int i = top; i <= bottom && i < Client.getMatrixHeight(); i++) {
-        for (int j = left; j <= right && j < Client.getMatrixWidth(); j++) {
-            if (i >= 0 && j >= 0 && platforms[i][j] != null && !platforms[i][j].isBroken()) {
-                return true;
+        int left = (int) (newX / Client.getCellSize());
+        int right = (int) ((newX + size - 1) / Client.getCellSize());
+        int top = (int) (currentY / Client.getCellSize());
+        int bottom = (int) ((currentY + size - 1) / Client.getCellSize());
+        
+        for (int i = top; i <= bottom && i < Client.getMatrixHeight(); i++) {
+            for (int j = left; j <= right && j < Client.getMatrixWidth(); j++) {
+                if (i >= 0 && j >= 0 && platforms[i][j] != null && !platforms[i][j].isBroken()) {
+                    return true;
+                }
             }
         }
+        return false;
     }
-    return false;
-}
 
-private boolean checkVerticalCollision(double currentX, double newY, Platform[][] platforms) {
-    int left = (int) (currentX / Client.getCellSize());
-    int right = (int) ((currentX + size - 1) / Client.getCellSize());
-    int top = (int) (newY / Client.getCellSize());
-    int bottom = (int) ((newY + size - 1) / Client.getCellSize());
-    
-    for (int i = top; i <= bottom && i < Client.getMatrixHeight(); i++) {
-        for (int j = left; j <= right && j < Client.getMatrixWidth(); j++) {
-            if (i >= 0 && j >= 0 && platforms[i][j] != null && !platforms[i][j].isBroken()) {
-                return true;
+    private boolean checkVerticalCollision(double currentX, double newY, Platform[][] platforms) {
+        int left = (int) (currentX / Client.getCellSize());
+        int right = (int) ((currentX + size - 1) / Client.getCellSize());
+        int top = (int) (newY / Client.getCellSize());
+        int bottom = (int) ((newY + size - 1) / Client.getCellSize());
+        
+        for (int i = top; i <= bottom && i < Client.getMatrixHeight(); i++) {
+            for (int j = left; j <= right && j < Client.getMatrixWidth(); j++) {
+                if (i >= 0 && j >= 0 && platforms[i][j] != null && !platforms[i][j].isBroken()) {
+                    return true;
+                }
             }
         }
+        return false;
     }
-    return false;
-}
 
-// Agregar este método a la clase Player
-public void checkSpecialBlockCollision(Platform[][] platforms) {
-    int gridX = (int) (x / Client.getCellSize());
-    int gridY = (int) (y / Client.getCellSize());
-    
-    // Verificar la plataforma actual y las adyacentes
-    for (int dy = -1; dy <= 1; dy++) {
-        for (int dx = -1; dx <= 1; dx++) {
-            int checkX = gridX + dx;
-            int checkY = gridY + dy;
-            
-            if (checkX >= 0 && checkX < Client.getMatrixWidth() && 
-                checkY >= 0 && checkY < Client.getMatrixHeight()) {
+    // Agregar este método a la clase Player
+    public void checkSpecialBlockCollision(Platform[][] platforms) {
+        int gridX = (int) (x / Client.getCellSize());
+        int gridY = (int) (y / Client.getCellSize());
+        
+        // Verificar la plataforma actual y las adyacentes
+        for (int dy = -1; dy <= 1; dy++) {
+            for (int dx = -1; dx <= 1; dx++) {
+                int checkX = gridX + dx;
+                int checkY = gridY + dy;
                 
-                Platform platform = platforms[checkY][checkX];
-                if (platform != null && platform.isSpecial() && 
-                    platform.intersects(x, y, size)) {
+                if (checkX >= 0 && checkX < Client.getMatrixWidth() && 
+                    checkY >= 0 && checkY < Client.getMatrixHeight()) {
                     
-                    // Enviar mensaje al servidor sobre la colisión
-                    sendSpecialBlockCollisionMessage(checkX, checkY);
-                    
-                    // Aquí puedes agregar efectos locales
-                    addLive();
-                    System.out.println("¡Colisión con bloque especial!");
+                    Platform platform = platforms[checkY][checkX];
+                    if (platform != null && platform.isSpecial() && 
+                        platform.intersects(x, y, size)) {
+                        
+                        // Enviar mensaje al servidor sobre la colisión
+                        sendSpecialBlockCollisionMessage(checkX, checkY);
+                        
+                        // Aquí puedes agregar efectos locales
+                        addLive();
+                        System.out.println("¡Colisión con bloque especial!");
+                    }
                 }
             }
         }
     }
-}
 
 
-public void setNetworkManager(NetworkManager networkManager) {
-    this.networkManager = networkManager;
-}
+    public void setNetworkManager(NetworkManager networkManager) {
+        this.networkManager = networkManager;
+    }
 
 // Método para establecer la referencia del cliente
-public void setClientReference(Client client) {
-    this.clientReference = client;
-}
+    public void setClientReference(Client client) {
+        this.clientReference = client;
+    }
 
-// Modificar el método en la clase Player para activar el bonus
-private void sendSpecialBlockCollisionMessage(int blockX, int blockY) {
-    if (networkManager != null && networkManager.isConnected()) {
-        networkManager.sendMessage("BONUS");
-        System.out.println("Enviado mensaje BONUS al servidor por colisión en bloque especial (" + blockX + "," + blockY + ")");
-        
-        // NUEVO: Activar el modo bonus localmente
-        if (clientReference != null) {
-            clientReference.activateBonusMode();
+    // Modificar el método en la clase Player para activar el bonus
+    private void sendSpecialBlockCollisionMessage(int blockX, int blockY) {
+        if (networkManager != null && networkManager.isConnected()) {
+            networkManager.sendMessage("BONUS");
+            System.out.println("Enviado mensaje BONUS al servidor por colisión en bloque especial (" + blockX + "," + blockY + ")");
+            
+            // NUEVO: Activar el modo bonus localmente
+            if (clientReference != null) {
+                clientReference.activateBonusMode();
+            }
+        } else {
+            System.out.println("NetworkManager no disponible o no conectado");
         }
-    } else {
-        System.out.println("NetworkManager no disponible o no conectado");
     }
-}
-    
+        
     public void draw(Graphics2D g) {
-    // Siempre dibujar el jugador mientras tenga al menos 1 vida
-    if (lives <= 0) {
-        return;
+        // Siempre dibujar el jugador mientras tenga al menos 1 vida
+        if (lives <= 0) {
+            return;
+        }
+        
+        // Efecto de parpadeo cuando es invulnerable
+        if (invulnerable && (invulnerabilityTimer / 10) % 2 == 0) {
+            // No dibujar en algunos frames para crear efecto de parpadeo
+            return;
+        }
+        
+        // Cambiar color si es invulnerable
+        if (invulnerable) {
+            g.setColor(new Color(0, 0, 255, 150)); // Azul semi-transparente
+        } else {
+            g.setColor(Color.BLUE);
+        }
+        
+        g.fillRect((int)x, (int)y, size, size);
+        g.setColor(Color.DARK_GRAY);
+        g.drawRect((int)x, (int)y, size, size);
+        
+        // Dibujar área de ataque si está atacando
+        if (isAttacking) {
+            g.setColor(new Color(255, 0, 0, 100)); // Rojo semi-transparente
+            int attackRadius = ATTACK_RANGE;
+            g.fillOval((int)(x + size/2 - attackRadius/2), (int)(y + size/2 - attackRadius/2), 
+                    attackRadius, attackRadius);
+            g.setColor(Color.RED);
+            g.drawOval((int)(x + size/2 - attackRadius/2), (int)(y + size/2 - attackRadius/2), 
+                    attackRadius, attackRadius);
+        }
     }
-    
-    // Efecto de parpadeo cuando es invulnerable
-    if (invulnerable && (invulnerabilityTimer / 10) % 2 == 0) {
-        // No dibujar en algunos frames para crear efecto de parpadeo
-        return;
-    }
-    
-    // Cambiar color si es invulnerable
-    if (invulnerable) {
-        g.setColor(new Color(0, 0, 255, 150)); // Azul semi-transparente
-    } else {
-        g.setColor(Color.BLUE);
-    }
-    
-    g.fillRect((int)x, (int)y, size, size);
-    g.setColor(Color.DARK_GRAY);
-    g.drawRect((int)x, (int)y, size, size);
-    
-    // Dibujar área de ataque si está atacando
-    if (isAttacking) {
-        g.setColor(new Color(255, 0, 0, 100)); // Rojo semi-transparente
-        int attackRadius = ATTACK_RANGE;
-        g.fillOval((int)(x + size/2 - attackRadius/2), (int)(y + size/2 - attackRadius/2), 
-                   attackRadius, attackRadius);
-        g.setColor(Color.RED);
-        g.drawOval((int)(x + size/2 - attackRadius/2), (int)(y + size/2 - attackRadius/2), 
-                   attackRadius, attackRadius);
-    }
-}
 }

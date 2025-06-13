@@ -66,7 +66,15 @@ public class Client extends JFrame implements KeyListener {
         startGameLoop();
     }
     
-    // Observer pattern methods
+    // Método para agregar un observer al cliente
+    /**
+     * Agrega un observador a la lista de observadores si no se ha alcanzado el número máximo permitido.
+     * 
+     * @param observer El observador que se desea agregar.
+     * @throws NullPointerException si el observador proporcionado es null.
+     * 
+     * Imprime en consola un mensaje indicando si el observador fue agregado exitosamente o si se alcanzó el límite máximo de observadores.
+     */
     public void addObserver(GameObserver observer) {
         if (observers.size() < MAX_OBSERVERS) {
             observers.add(observer);
@@ -76,11 +84,22 @@ public class Client extends JFrame implements KeyListener {
         }
     }
     
+    /**
+     * Elimina un observador de la lista de observadores registrados.
+     * 
+     * @param observer El observador que se desea eliminar.
+     */
     public void removeObserver(GameObserver observer) {
         observers.remove(observer);
         System.out.println("Observer removido. Total: " + observers.size() + "/" + MAX_OBSERVERS);
     }
     
+    /**
+     * Notifica a todos los observadores registrados sobre el cambio en el estado del juego.
+     * Si la lista de observadores no está vacía, crea una nueva instancia de GameState
+     * con la información actual del juego y llama al método updateGameState de cada observador,
+     * pasando el nuevo estado del juego como parámetro.
+     */
     private void notifyObservers() {
         if (!observers.isEmpty()) {
             GameState gameState = new GameState(
@@ -94,12 +113,23 @@ public class Client extends JFrame implements KeyListener {
         }
     }
     
+    /**
+     * Notifica a todos los observadores registrados sobre un cambio en el estado de la conexión.
+     *
+     * @param status El nuevo estado de la conexión que se notificará a los observadores.
+     */
     private void notifyObserversStatus(String status) {
         for (GameObserver observer : observers) {
             observer.updateConnectionStatus(status);
         }
     }
     
+    /**
+     * Crea una nueva ventana de espectador si no se ha alcanzado el número máximo permitido.
+     * Si el límite de espectadores ha sido alcanzado, muestra un mensaje de advertencia al usuario.
+     * Al crear una nueva ventana de espectador, se le asigna un identificador único, se añade a la lista de ventanas de espectadores,
+     * se registra como observador y se muestra la ventana. Finalmente, actualiza el título de la ventana principal del cliente.
+     */
     private void createSpectatorWindow() {
     if (observers.size() >= MAX_OBSERVERS) {
         JOptionPane.showMessageDialog(this, 
@@ -112,8 +142,7 @@ public class Client extends JFrame implements KeyListener {
     SpectatorWindow spectator = new SpectatorWindow(nextSpectatorId++);
     spectatorWindows.add(spectator);
     addObserver(spectator);
-    
-    // CAMBIO: Usar setVisible(true) en lugar de show()
+
     spectator.setVisible(true);
     
     // Actualizar el título del cliente principal
@@ -122,6 +151,11 @@ public class Client extends JFrame implements KeyListener {
     System.out.println("Ventana de espectador creada. ID: " + (nextSpectatorId - 1));
 }
     
+    /**
+     * Actualiza el título de la ventana principal del cliente.
+     * El título incluye una descripción básica de los controles y, si hay observadores conectados,
+     * muestra la cantidad actual de espectadores junto con el máximo permitido.
+     */
     private void updateMainWindowTitle() {
         String title = "Cliente del Juego de Plataformas - WASD para mover";
         if (!observers.isEmpty()) {
@@ -131,31 +165,30 @@ public class Client extends JFrame implements KeyListener {
     }
     
     private void initializeGame() {
-    player = new Player(2 * CELL_SIZE, (MATRIX_HEIGHT - 2) * CELL_SIZE);
-    player2 = new Player(17 * CELL_SIZE, (MATRIX_HEIGHT - 2) * CELL_SIZE);
-    enemyManager = new EnemyManager();
-    fruitManager = new FruitManager();
-    enemyManager.setPlayerReference(player);
-    platforms = new Platform[MATRIX_HEIGHT][MATRIX_WIDTH];
-    gameMatrix = new int[MATRIX_HEIGHT][MATRIX_WIDTH];
-    networkManager = new NetworkManager(this);
-    
-    // NUEVO: Inicializar matriz bonus
-    initializeBonusMatrix();
-    
-    player.setNetworkManager(networkManager);
-    player2.setNetworkManager(networkManager);
-    
-    // NUEVO: Establecer referencias del cliente en los jugadores
-    player.setClientReference(this);
-    player2.setClientReference(this);
-}
+        player = new Player(2 * CELL_SIZE, (MATRIX_HEIGHT - 2) * CELL_SIZE);
+        player2 = new Player(17 * CELL_SIZE, (MATRIX_HEIGHT - 2) * CELL_SIZE);
+        enemyManager = new EnemyManager();
+        fruitManager = new FruitManager();
+        enemyManager.setPlayerReference(player);
+        platforms = new Platform[MATRIX_HEIGHT][MATRIX_WIDTH];
+        gameMatrix = new int[MATRIX_HEIGHT][MATRIX_WIDTH];
+        networkManager = new NetworkManager(this);
+        
+        // NUEVO: Inicializar matriz bonus
+        initializeBonusMatrix();
+        
+        player.setNetworkManager(networkManager);
+        player2.setNetworkManager(networkManager);
+        
+        // NUEVO: Establecer referencias del cliente en los jugadores
+        player.setClientReference(this);
+        player2.setClientReference(this);
+    }
     
     // Método para inicializar la matriz bonus (agregar en initializeGame())
 private void initializeBonusMatrix() {
     bonusMatrix = new int[MATRIX_HEIGHT][MATRIX_WIDTH];
     
-    // Definir tu matriz bonus personalizada aquí
     // Ejemplo de matriz con plataformas especiales y normales
     int[][] customMatrix = {
         {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
@@ -193,7 +226,6 @@ private void initializeBonusMatrix() {
 }
 
 // Método para activar el modo bonus
-// Método para activar el modo bonus (CORREGIDO)
 public void activateBonusMode() {
     if (bonusModeActive) {
         return; // Ya está activo
@@ -298,7 +330,7 @@ private void deactivateBonusMode() {
     
     System.out.println("Modo bonus desactivado, regresando a la matriz original");
 }
-    
+     
     public static Platform[][] getCurrentPlatforms() {
         return currentPlatforms;
     }

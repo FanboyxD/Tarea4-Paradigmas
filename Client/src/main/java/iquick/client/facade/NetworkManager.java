@@ -14,7 +14,7 @@ import java.nio.ByteOrder;
 
 public class NetworkManager {
     private static final String SERVER_HOST = "localhost";
-    private static final int SERVER_PORT = 8080;
+    private static final int SERVER_PORT = 8888;
     private static final int MAX_ENEMIES = 10;
     private static final int MAX_FRUITS = 4;
     
@@ -34,6 +34,13 @@ public class NetworkManager {
         this.client = client;
     }
     
+    /**
+     * Establece una conexión con el servidor utilizando los parámetros SERVER_HOST y SERVER_PORT.
+     * Inicializa los flujos de entrada y salida para la comunicación con el servidor.
+     * Actualiza el estado de la conexión en el cliente y muestra mensajes informativos en la consola.
+     * Si la conexión es exitosa, inicia un hilo para recibir datos del juego.
+     * En caso de error, actualiza el estado de la conexión con el mensaje de error correspondiente.
+     */
     public void connect() {
         try {
             socket = new Socket(SERVER_HOST, SERVER_PORT);
@@ -53,6 +60,11 @@ public class NetworkManager {
         }
     }
     
+    /**
+     * Desconecta el cliente del servidor cerrando el socket y los flujos de entrada y salida.
+     * Cambia el estado de conexión a falso. Si ocurre un error al cerrar los recursos,
+     * se imprime un mensaje de error en la salida de error estándar.
+     */
     public void disconnect() {
         connected = false;
         try {
@@ -70,7 +82,20 @@ public class NetworkManager {
         }
     }
     
-    // Función para enviar mensajes de texto al servidor (mejorada para envío inmediato)
+    /**
+     * Envía un mensaje al servidor a través del flujo de salida.
+     * 
+     * El mensaje se empaqueta en un buffer con el siguiente formato:
+     * 
+     * 4 bytes: Tipo de mensaje (entero, LITTLE_ENDIAN)
+     * 4 bytes: ID del cliente (entero, LITTLE_ENDIAN, actualmente 0)
+     * MESSAGE_BUFFER_SIZE bytes: Contenido del mensaje en UTF-8, limitado a MESSAGE_BUFFER_SIZE-1 bytes más un terminador nulo
+     * 
+     * Si el cliente no está conectado o el flujo de salida es nulo, no se envía nada.
+     * El método es seguro para hilos mediante sincronización sobre el flujo de salida.
+     *
+     * @param message El mensaje a enviar al servidor.
+     */
     public void sendMessage(String message) {
         if (!connected || outputStream == null) {
             System.err.println("No conectado al servidor");
@@ -110,6 +135,11 @@ public class NetworkManager {
         }
     }
     
+    /**
+     * Recibe datos del juego desde el servidor de manera continua mientras la conexión esté activa.
+     * Lee los datos del flujo de entrada en bloques de hasta 4096 bytes y los procesa mediante el método parseGameData.
+     * Si ocurre un error de entrada/salida, se actualiza el estado de conexión del cliente y se muestra un mensaje de error.
+     */
     private void receiveGameData() {
         byte[] buffer = new byte[4096];
         
@@ -216,8 +246,7 @@ public class NetworkManager {
         int playerScore = 0;
         if (buffer.remaining() >= 4) {
             playerScore = buffer.getInt();
-            // Opcional: actualizar puntuación en el cliente
-            // client.updatePlayerScore(playerScore);
+
         }
         
         // Actualizar cliente
@@ -229,7 +258,7 @@ public class NetworkManager {
         
     } catch (Exception e) {
         System.err.println("Error parseando datos del juego: " + e.getMessage());
-        e.printStackTrace(); // Para debug adicional
+        e.printStackTrace(); 
     }
 }
     

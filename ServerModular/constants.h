@@ -2,7 +2,7 @@
 #define CONSTANTS_H
 
 // Configuración del servidor
-#define PORT 8080
+#define PORT 8888
 #define MAX_CLIENTS 2
 
 #define MSG_PLAYER_MOVEMENT 1

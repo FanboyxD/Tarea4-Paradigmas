@@ -30,6 +30,14 @@ public class ConcreteGameEntityFactory extends GameEntityFactory {
         return fruit;
     }
     
+    /**
+     * Crea una nueva instancia de Enemy en las coordenadas de la cuadrícula especificadas y del tipo indicado.
+     * 
+     * @param gridX la posición X en la cuadrícula donde se creará el enemigo.
+     * @param gridY la posición Y en la cuadrícula donde se creará el enemigo.
+     * @param type el tipo de enemigo a crear.
+     * @return una nueva instancia de Enemy activa en la posición y tipo especificados.
+     */
     @Override
     public Enemy createEnemyFromGrid(int gridX, int gridY, EnemyType type) {
         Enemy enemy = new Enemy(gridX, gridY, type);
@@ -37,6 +45,15 @@ public class ConcreteGameEntityFactory extends GameEntityFactory {
         return enemy;
     }
     
+    /**
+     * Crea una nueva instancia de {@link Fruit} en las coordenadas de la cuadrícula especificadas
+     * y del tipo indicado. El fruto creado se marca como activo.
+     *
+     * @param gridX la posición X en la cuadrícula donde se creará el fruto
+     * @param gridY la posición Y en la cuadrícula donde se creará el fruto
+     * @param type el tipo de fruto a crear
+     * @return una nueva instancia de {@link Fruit} activa en la posición y tipo especificados
+     */
     @Override
     public Fruit createFruitFromGrid(int gridX, int gridY, FruitType type) {
         Fruit fruit = new Fruit(gridX, gridY, type);
