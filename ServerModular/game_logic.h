@@ -11,11 +11,10 @@ typedef enum {
 } EnemyType;
 
 typedef enum {
-    FRUIT_NONE = 0,
-    FRUIT_NARANJA = 1,
-    FRUIT_BANANO = 2,
-    FRUIT_BERENJENA = 3,
-    FRUIT_LECHUGA = 4
+    FRUIT_NARANJA = 0,
+    FRUIT_BANANO = 1,
+    FRUIT_BERENJENA = 2,
+    FRUIT_LECHUGA = 3
 } FruitType;
 
 typedef struct {
